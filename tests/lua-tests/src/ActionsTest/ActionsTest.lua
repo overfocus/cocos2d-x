@@ -311,27 +311,17 @@ local function ActionCardinalSpline()
 
 	kathia:setPosition(cc.p(size.width / 2, 50))
 	kathia:runAction(seq2)
---[[
-    local function drawCardinalSpline()
-        kmGLPushMatrix()
-        kmGLTranslatef(50, 50, 0)
-        cc.DrawPrimitives.drawCardinalSpline(array, 0, 100)
-        kmGLPopMatrix()
+    
+    local drawNode1 = cc.DrawNode:create()
+    drawNode1:setPosition(50, 50)
+    drawNode1:drawCardinalSpline(array, 0, 100, cc.c4f(0,0,1,1))
+    layer:addChild(drawNode1)
+    
+    local drawNode2 = cc.DrawNode:create()
+    drawNode2:setPosition(size.width/2, 50)
+    drawNode2:drawCardinalSpline(array, 1, 100, cc.c4f(0,0,1,1))
+    layer:addChild(drawNode2)
 
-        kmGLPushMatrix()
-        kmGLTranslatef(size.width / 2, 50, 0)
-        cc.DrawPrimitives.drawCardinalSpline(array, 1, 100)
-        kmGLPopMatrix()
-    end
-
-    array:retain()
-    local glNode  = gl.glNodeCreate()
-    glNode:setContentSize(cc.size(size.width, size.height))
-    glNode:setAnchorPoint(cc.p(0.5, 0.5))
-    glNode:registerScriptDrawHandler(drawCardinalSpline)
-    layer:addChild(glNode,-10)
-    glNode:setPosition( size.width / 2, size.height / 2)
-]]--
 	Helper.titleLabel:setString("CardinalSplineBy / CardinalSplineAt")
 	Helper.subtitleLabel:setString("Cardinal Spline paths.\nTesting different tensions for one array")
 	return layer
@@ -374,25 +364,15 @@ local function ActionCatmullRom()
     local reverse2 = action2:reverse()
     local seq2 = cc.Sequence:create(action2, reverse2)
     kathia:runAction(seq2)
---[[
-    local function drawCatmullRom()
-        kmGLPushMatrix()
-        kmGLTranslatef(50, 50, 0)
-        cc.DrawPrimitives.drawCatmullRom(array, 50)
-        kmGLPopMatrix()
-
-        cc.DrawPrimitives.drawCatmullRom(array2,50)
-    end
-
-    array:retain()
-    array2:retain()
-    local glNode  = gl.glNodeCreate()
-    glNode:setContentSize(cc.size(size.width, size.height))
-    glNode:setAnchorPoint(cc.p(0.5, 0.5))
-    glNode:registerScriptDrawHandler(drawCatmullRom)
-    layer:addChild(glNode,-10)
-    glNode:setPosition( size.width / 2, size.height / 2)
-    ]]--
+    local drawNode1 = cc.DrawNode:create()
+    drawNode1:setPosition(50, 50)
+    drawNode1:drawCatmullRom(array, 50, cc.c4f(0,0,1,1))
+    layer:addChild(drawNode1)
+    
+    local drawNode2 = cc.DrawNode:create()
+    --drawNode2:setPosition(size.width/2, 50)
+    drawNode2:drawCatmullRom(array2, 50, cc.c4f(0,0,1,1))
+    layer:addChild(drawNode2)
 
     Helper.titleLabel:setString("CatmullRomBy / CatmullRomTo")
     Helper.subtitleLabel:setString("Catmull Rom spline paths. Testing reverse too")
@@ -965,21 +945,14 @@ local function ActionFollow()
     grossini:runAction(rep)
 
     layer:runAction(cc.Follow:create(grossini, cc.rect(0, 0, size.width * 2 - 100, size.height)))
-
-    local function draw()
-        local winSize = cc.Director:getInstance():getWinSize()
-        local x = winSize.width * 2 - 100
-        local y = winSize.height
-        local vertices = { cc.p(5, 5), cc.p(x - 5, 5), cc.p(x - 5,y - 5), cc.p(5,y - 5) }
-        cc.DrawPrimitives.drawPoly(vertices, 4, true)
-    end
-
-    local glNode  = gl.glNodeCreate()
-    glNode:setContentSize(cc.size(size.width, size.height))
-    glNode:setAnchorPoint(cc.p(0.5, 0.5))
-    glNode:registerScriptDrawHandler(draw)
-    layer:addChild(glNode,-10)
-    glNode:setPosition( size.width / 2, size.height / 2)
+    
+    local drawNode = cc.DrawNode:create()
+    local winSize = cc.Director:getInstance():getWinSize()
+    local x = winSize.width * 2 - 100
+    local y = winSize.height
+    local vertices = { cc.p(5, 5), cc.p(x - 5, 5), cc.p(x - 5,y - 5), cc.p(5,y - 5) }
+    drawNode:drawPoly(vertices, 4, true, cc.c4f(0,0,1,1))
+    layer:addChild(drawNode)
 
 	Helper.subtitleLabel:setString("Follow action")
 	return layer
@@ -1083,6 +1056,7 @@ end
 local function addSprite(dt)
 	local scheduler = cc.Director:getInstance():getScheduler()
 	scheduler:unscheduleScriptEntry(Issue1305_entry)
+    Issue1305_entry = nil
 
 	spriteTmp:setPosition(cc.p(250, 250))
     Issue1305_layer:addChild(spriteTmp)
@@ -1091,9 +1065,18 @@ end
 local function Issue1305_onEnterOrExit(tag)
 	local scheduler = cc.Director:getInstance():getScheduler()
 	if tag == "enter" then
+        spriteTmp = cc.Sprite:create("Images/grossini.png")
+        spriteTmp:runAction(cc.CallFunc:create(Issue1305_log))
+        spriteTmp:retain()
+
 		Issue1305_entry = scheduler:scheduleScriptFunc(addSprite, 2, false)
 	elseif tag == "exit" then
-		scheduler:unscheduleScriptEntry(Issue1305_entry)
+        if Issue1305_entry ~= nil then
+    		scheduler:unscheduleScriptEntry(Issue1305_entry)
+            Issue1305_entry = nil
+        end
+        spriteTmp:release()
+        spriteTmp = nil
 	end
 end
 
@@ -1102,9 +1085,6 @@ local function ActionIssue1305()
 	initWithLayer(Issue1305_layer)
 
 	centerSprites(0)
-
-    spriteTmp = cc.Sprite:create("Images/grossini.png")
-    spriteTmp:runAction(cc.CallFunc:create(Issue1305_log))
 
     Issue1305_layer:registerScriptHandler(Issue1305_onEnterOrExit)
 
@@ -1281,6 +1261,7 @@ function ActionsTest()
 		ActionIssue1288_2,  
 		ActionIssue1327
     }
+    Helper.index = 1
 
 	scene:addChild(ActionManual())
 	scene:addChild(CreateBackMenuItem())

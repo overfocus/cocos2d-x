@@ -28,27 +28,34 @@ THE SOFTWARE.
 #include "base/ccMacros.h"
 #include "base/CCScriptSupport.h"
 
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
 #include <algorithm>    // std::find
+#include <thread>
+#include <mutex>
+#include <vector>
 #endif
 
 NS_CC_BEGIN
 
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
 static void trackRef(Ref* ref);
 static void untrackRef(Ref* ref);
 #endif
 
 Ref::Ref()
 : _referenceCount(1) // when the Ref is created, the reference count of it is 1
+#if CC_ENABLE_SCRIPT_BINDING
+, _luaID (0)
+, _scriptObject(nullptr)
+, _rooted(false)
+#endif
 {
 #if CC_ENABLE_SCRIPT_BINDING
     static unsigned int uObjectCount = 0;
-    _luaID = 0;
     _ID = ++uObjectCount;
 #endif
     
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
     trackRef(this);
 #endif
 }
@@ -61,18 +68,20 @@ Ref::~Ref()
     {
         ScriptEngineManager::getInstance()->getScriptEngine()->removeScriptObjectByObject(this);
     }
+#if !CC_ENABLE_GC_FOR_NATIVE_OBJECTS
     else
     {
         ScriptEngineProtocol* pEngine = ScriptEngineManager::getInstance()->getScriptEngine();
-        if (pEngine != NULL && pEngine->getScriptType() == kScriptTypeJavascript)
+        if (pEngine != nullptr && pEngine->getScriptType() == kScriptTypeJavascript)
         {
             pEngine->removeScriptObjectByObject(this);
         }
     }
-#endif
+#endif // !CC_ENABLE_GC_FOR_NATIVE_OBJECTS
+#endif // CC_ENABLE_SCRIPT_BINDING
 
 
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
     if (_referenceCount != 0)
         untrackRef(this);
 #endif
@@ -80,13 +89,13 @@ Ref::~Ref()
 
 void Ref::retain()
 {
-    CCASSERT(_referenceCount > 0, "reference count should greater than 0");
+    CCASSERT(_referenceCount > 0, "reference count should be greater than 0");
     ++_referenceCount;
 }
 
 void Ref::release()
 {
-    CCASSERT(_referenceCount > 0, "reference count should greater than 0");
+    CCASSERT(_referenceCount > 0, "reference count should be greater than 0");
     --_referenceCount;
 
     if (_referenceCount == 0)
@@ -126,7 +135,7 @@ void Ref::release()
         }
 #endif
 
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
         untrackRef(this);
 #endif
         delete this;
@@ -144,12 +153,14 @@ unsigned int Ref::getReferenceCount() const
     return _referenceCount;
 }
 
-#if CC_USE_MEM_LEAK_DETECTION
+#if CC_REF_LEAK_DETECTION
 
-static std::list<Ref*> __refAllocationList;
+static std::vector<Ref*> __refAllocationList;
+static std::mutex __refMutex;
 
 void Ref::printLeaks()
 {
+    std::lock_guard<std::mutex> refLockGuard(__refMutex);
     // Dump Ref object memory leaks
     if (__refAllocationList.empty())
     {
@@ -170,6 +181,7 @@ void Ref::printLeaks()
 
 static void trackRef(Ref* ref)
 {
+    std::lock_guard<std::mutex> refLockGuard(__refMutex);
     CCASSERT(ref, "Invalid parameter, ref should not be null!");
 
     // Create memory allocation record.
@@ -178,6 +190,7 @@ static void trackRef(Ref* ref)
 
 static void untrackRef(Ref* ref)
 {
+    std::lock_guard<std::mutex> refLockGuard(__refMutex);
     auto iter = std::find(__refAllocationList.begin(), __refAllocationList.end(), ref);
     if (iter == __refAllocationList.end())
     {
@@ -188,7 +201,7 @@ static void untrackRef(Ref* ref)
     __refAllocationList.erase(iter);
 }
 
-#endif // #if CC_USE_MEM_LEAK_DETECTION
+#endif // #if CC_REF_LEAK_DETECTION
 
 
 NS_CC_END

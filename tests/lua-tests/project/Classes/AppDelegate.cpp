@@ -1,8 +1,10 @@
 #include "cocos2d.h"
 #include "AppDelegate.h"
-#include "CCLuaEngine.h"
+#include "scripting/lua-bindings/manual/CCLuaEngine.h"
 #include "audio/include/SimpleAudioEngine.h"
 #include "lua_assetsmanager_test_sample.h"
+#include "scripting/lua-bindings/manual/lua_module_register.h"
+#include "lua_test_bindings.h"
 
 using namespace CocosDenshion;
 
@@ -17,50 +19,48 @@ AppDelegate::~AppDelegate()
     SimpleAudioEngine::end();
 }
 
+void AppDelegate::initGLContextAttrs()
+{
+    GLContextAttrs glContextAttrs = {8, 8, 8, 8, 24, 8};
+    
+    GLView::setGLContextAttrs(glContextAttrs);
+}
+
 bool AppDelegate::applicationDidFinishLaunching()
 {
-    auto director = Director::getInstance();
-    auto glview = director->getOpenGLView();
-    if(!glview) {
-        glview = GLView::createWithRect("Lua Tests", Rect(0,0,900,640));
-        director->setOpenGLView(glview);
-    }
-
-    // turn on display FPS
-    director->setDisplayStats(true);
-
-    // set FPS. the default value is 1.0/60 if you don't call this
-    director->setAnimationInterval(1.0 / 60);
-
-    auto screenSize = glview->getFrameSize();
-
-    auto designSize = Size(480, 320);
-
-    if (screenSize.height > 320)
-    {
-        auto resourceSize = Size(960, 640);
-        director->setContentScaleFactor(resourceSize.height/designSize.height);
-    }
-
-    glview->setDesignResolutionSize(designSize.width, designSize.height, ResolutionPolicy::FIXED_HEIGHT);
-
     // register lua engine
     LuaEngine* pEngine = LuaEngine::getInstance();
     ScriptEngineManager::getInstance()->setScriptEngine(pEngine);
+
     
     LuaStack* stack = pEngine->getLuaStack();
     stack->setXXTEAKeyAndSign("2dxLua", strlen("2dxLua"), "XXTEA", strlen("XXTEA"));
+    
+    lua_State* L = stack->getLuaState();
+    
+    lua_module_register(L);
 
+    lua_getglobal(L, "_G");
+    if (lua_istable(L,-1))//stack:...,_G,
+    {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32 || CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID ||CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
-    register_assetsmanager_test_sample(stack->getLuaState());
+        register_assetsmanager_test_sample(L);
 #endif
+        register_test_binding(L);
+    }
+    lua_pop(L, 1);
 
-    pEngine->executeScriptFile("src/controller.lua");
+#if CC_64BITS
+    FileUtils::getInstance()->addSearchPath("src/64bit");
+#endif
+    FileUtils::getInstance()->addSearchPath("src");
+    FileUtils::getInstance()->addSearchPath("res");
+    pEngine->executeScriptFile("controller.lua");
 
     return true;
 }
 
-// This function will be called when the app is inactive. When comes a phone call,it's be invoked too
+// This function will be called when the app is inactive. Note, when receiving a phone call it is invoked.
 void AppDelegate::applicationDidEnterBackground()
 {
     Director::getInstance()->stopAnimation();

@@ -1,6 +1,6 @@
 /****************************************************************************
  Copyright (c) 2012 cocos2d-x.org
- Copyright (c) 2013-2014 Chukong Technologies Inc.
+ Copyright (c) 2013-2016 Chukong Technologies Inc.
 
  http://www.cocos2d-x.org
 
@@ -24,7 +24,10 @@
  ****************************************************************************/
 
 #include "NodeTest.h"
+#include <regex>
 #include "../testResource.h"
+
+USING_NS_CC;
 
 enum 
 {
@@ -35,73 +38,42 @@ enum
 };
 
 
-Layer* nextCocosNodeAction();
-Layer* backCocosNodeAction();
-Layer* restartCocosNodeAction();
-
 //------------------------------------------------------------------
 //
 // TestCocosNodeDemo
 //
 //------------------------------------------------------------------
 
-static int sceneIdx = -1; 
-
-
-static std::function<Layer*()> createFunctions[] =
+CocosNodeTests::CocosNodeTests()
 {
-    CL(CameraTest1),
-    //Camera has been removed from CCNode
-    //todo add new feature to support it
-    // CL(CameraTest2),
-    CL(CameraCenterTest),
-    CL(Test2),
-    CL(Test4),
-    CL(Test5),
-    CL(Test6),
-    CL(StressTest1),
-    CL(StressTest2),
-    CL(NodeToWorld),
-    CL(NodeToWorld3D),
-    CL(SchedulerTest1),
-    CL(CameraOrbitTest),
-    //Camera has been removed from CCNode
-    //todo add new feature to support it
-    //CL(CameraZoomTest),
-    CL(ConvertToNode),
-    CL(NodeOpaqueTest),
-    CL(NodeNonOpaqueTest),
-    CL(NodeGlobalZValueTest),
-    CL(NodeNormalizedPositionTest1),
-    CL(NodeNormalizedPositionTest2),
-    CL(NodeNameTest),
-};
-
-#define MAX_LAYER    (sizeof(createFunctions) / sizeof(createFunctions[0]))
-
-Layer* nextCocosNodeAction()
-{
-    sceneIdx++;
-    sceneIdx = sceneIdx % MAX_LAYER;
-
-    return createFunctions[sceneIdx]();
+    //ADD_TEST_CASE(CameraTest1);
+    // TODO: Camera has been removed from CCNode; add new feature to support it
+    // ADD_TEST_CASE(CameraTest2);
+    //ADD_TEST_CASE(CameraCenterTest);
+    ADD_TEST_CASE(NodeTest2);
+    ADD_TEST_CASE(NodeTest4);
+    ADD_TEST_CASE(NodeTest5);
+    ADD_TEST_CASE(NodeTest6);
+    ADD_TEST_CASE(StressTest1);
+    ADD_TEST_CASE(StressTest2);
+    ADD_TEST_CASE(NodeToWorld);
+    ADD_TEST_CASE(NodeToWorld3D);
+    ADD_TEST_CASE(SchedulerTest1);
+    ADD_TEST_CASE(SchedulerCallbackTest);
+    ADD_TEST_CASE(CameraOrbitTest);
+    // TODO: Camera has been removed from CCNode; add new feature to support it
+    //ADD_TEST_CASE(CameraZoomTest);
+    ADD_TEST_CASE(ConvertToNode);
+    ADD_TEST_CASE(NodeOpaqueTest);
+    ADD_TEST_CASE(NodeNonOpaqueTest);
+    ADD_TEST_CASE(NodeGlobalZValueTest);
+    ADD_TEST_CASE(NodeNormalizedPositionTest1);
+    ADD_TEST_CASE(NodeNormalizedPositionTest2);
+    ADD_TEST_CASE(NodeNormalizedPositionBugTest);
+    ADD_TEST_CASE(NodeNameTest);
+    ADD_TEST_CASE(Issue16100Test);
+    ADD_TEST_CASE(Issue16735Test);
 }
-
-Layer* backCocosNodeAction()
-{
-    sceneIdx--;
-    int total = MAX_LAYER;
-    if( sceneIdx < 0 )
-        sceneIdx += total;    
-    
-    return createFunctions[sceneIdx]();
-}
-
-Layer* restartCocosNodeAction()
-{
-    return createFunctions[sceneIdx]();
-} 
-
 
 TestCocosNodeDemo::TestCocosNodeDemo(void)
 {
@@ -116,48 +88,13 @@ std::string TestCocosNodeDemo::title() const
     return "Node Test";
 }
 
-std::string TestCocosNodeDemo::subtitle() const
-{
-    return "";
-}
-
-void TestCocosNodeDemo::onEnter()
-{
-    BaseTest::onEnter();
-}
-
-void TestCocosNodeDemo::restartCallback(Ref* sender)
-{
-    auto s = new CocosNodeTestScene();//CCScene::create();
-    s->addChild(restartCocosNodeAction()); 
-
-    Director::getInstance()->replaceScene(s);
-    s->release();
-}
-
-void TestCocosNodeDemo::nextCallback(Ref* sender)
-{
-    auto s = new CocosNodeTestScene();//CCScene::create();
-    s->addChild( nextCocosNodeAction() );
-    Director::getInstance()->replaceScene(s);
-    s->release();
-}
-
-void TestCocosNodeDemo::backCallback(Ref* sender)
-{
-    auto s = new CocosNodeTestScene();//CCScene::create();
-    s->addChild( backCocosNodeAction() );
-    Director::getInstance()->replaceScene(s);
-    s->release();
-} 
-
-
 //------------------------------------------------------------------
 //
-// Test2
+// NodeTest2
 //
 //------------------------------------------------------------------
-void Test2::onEnter()
+
+void NodeTest2::onEnter()
 {
     TestCocosNodeDemo::onEnter();
 
@@ -182,12 +119,12 @@ void Test2::onEnter()
     auto a1 = RotateBy::create(2, 360);
     auto a2 = ScaleBy::create(2, 2);
     
-    auto action1 = RepeatForever::create( Sequence::create(a1, a2, a2->reverse(), NULL) );
+    auto action1 = RepeatForever::create( Sequence::create(a1, a2, a2->reverse(), nullptr) );
     auto action2 = RepeatForever::create( Sequence::create(
 																	a1->clone(),
 																	a2->clone(),
 																	a2->reverse(),
-																	NULL)
+																	nullptr)
 												);
     
     sp2->setAnchorPoint(Vec2(0,0));
@@ -196,7 +133,7 @@ void Test2::onEnter()
     sp2->runAction(action2);
 }
 
-std::string Test2::subtitle() const
+std::string NodeTest2::subtitle() const
 {
     return "anchorPoint and children";
 }
@@ -204,13 +141,13 @@ std::string Test2::subtitle() const
 
 //------------------------------------------------------------------
 //
-// Test4
+// NodeTest4
 //
 //------------------------------------------------------------------
 #define SID_DELAY2        1
 #define SID_DELAY4        2
 
-Test4::Test4()
+NodeTest4::NodeTest4()
 {
     auto sp1 = Sprite::create(s_pathSister1);
     auto sp2 = Sprite::create(s_pathSister2);
@@ -221,24 +158,24 @@ Test4::Test4()
     addChild(sp1, 0, 2);
     addChild(sp2, 0, 3);
     
-    schedule( schedule_selector(Test4::delay2), 2.0f); 
-    schedule( schedule_selector(Test4::delay4), 4.0f); 
+    schedule(CC_CALLBACK_1(NodeTest4::delay2, this), 2.0f, "delay2_key");
+    schedule(CC_CALLBACK_1(NodeTest4::delay4, this), 4.0f, "delay4_key");
 }
 
-void Test4::delay2(float dt)
+void NodeTest4::delay2(float dt)
 {
     auto node = static_cast<Sprite*>(getChildByTag(2));
     auto action1 = RotateBy::create(1, 360);
     node->runAction(action1);
 }
 
-void Test4::delay4(float dt)
+void NodeTest4::delay4(float dt)
 {
-    unschedule(schedule_selector(Test4::delay4)); 
+    unschedule("delay4_key");
     removeChildByTag(3, false);
 }
 
-std::string Test4::subtitle() const
+std::string NodeTest4::subtitle() const
 {
     return "tags";
 }
@@ -246,10 +183,10 @@ std::string Test4::subtitle() const
 
 //------------------------------------------------------------------
 //
-// Test5
+// NodeTest5
 //
 //------------------------------------------------------------------
-Test5::Test5()
+NodeTest5::NodeTest5()
 {
     auto sp1 = Sprite::create(s_pathSister1);
     auto sp2 = Sprite::create(s_pathSister2);
@@ -259,7 +196,7 @@ Test5::Test5()
 
     auto rot = RotateBy::create(2, 360);
     auto rot_back = rot->reverse();
-    auto forever = RepeatForever::create(Sequence::create(rot, rot_back, NULL));
+    auto forever = RepeatForever::create(Sequence::create(rot, rot_back, nullptr));
     auto forever2 = forever->clone();
     forever->setTag(101);
     forever2->setTag(102);
@@ -270,10 +207,10 @@ Test5::Test5()
     sp1->runAction(forever);
     sp2->runAction(forever2);
     
-    schedule( schedule_selector(Test5::addAndRemove), 2.0f);
+    schedule(CC_CALLBACK_1(NodeTest5::addAndRemove, this), 2.0f, "add_and_remove_key");
 }
 
-void Test5::addAndRemove(float dt)
+void NodeTest5::addAndRemove(float dt)
 {
     auto sp1 = getChildByTag(kTagSprite1);
     auto sp2 = getChildByTag(kTagSprite2);
@@ -291,17 +228,17 @@ void Test5::addAndRemove(float dt)
     sp2->release();
 }
 
-std::string Test5::subtitle() const
+std::string NodeTest5::subtitle() const
 {
     return "remove and cleanup";
 }
 
 //------------------------------------------------------------------
 //
-// Test6
+// NodeTest6
 //
 //------------------------------------------------------------------
-Test6::Test6()
+NodeTest6::NodeTest6()
 {
     auto sp1 = Sprite::create(s_pathSister1);
     auto sp11 = Sprite::create(s_pathSister1);
@@ -314,7 +251,7 @@ Test6::Test6()
         
     auto rot = RotateBy::create(2, 360);
     auto rot_back = rot->reverse();
-    auto forever1 = RepeatForever::create(Sequence::create(rot, rot_back, NULL));
+    auto forever1 = RepeatForever::create(Sequence::create(rot, rot_back, nullptr));
     auto forever11 = forever1->clone();
 
     auto forever2 = forever1->clone();
@@ -330,10 +267,10 @@ Test6::Test6()
     sp2->runAction(forever2);
     sp21->runAction(forever21);
     
-    schedule( schedule_selector(Test6::addAndRemove), 2.0f);
+    schedule(CC_CALLBACK_1(NodeTest6::addAndRemove, this), 2.0f, "add_and_remove_key");
 }
 
-void Test6::addAndRemove(float dt)
+void NodeTest6::addAndRemove(float dt)
 {
     auto sp1 = getChildByTag(kTagSprite1);
     auto sp2 = getChildByTag(kTagSprite2);
@@ -352,7 +289,7 @@ void Test6::addAndRemove(float dt)
 
 }
 
-std::string Test6::subtitle() const
+std::string NodeTest6::subtitle() const
 {
     return "remove/cleanup with children";
 }
@@ -372,12 +309,12 @@ StressTest1::StressTest1()
     
     sp1->setPosition( Vec2(s.width/2, s.height/2) );        
 
-    schedule( schedule_selector(StressTest1::shouldNotCrash), 1.0f);
+    schedule(CC_CALLBACK_1(StressTest1::shouldNotCrash, this), 1.0f, "should_not_crash_key");
 }
 
 void StressTest1::shouldNotCrash(float dt)
 {
-    unschedule(schedule_selector(StressTest1::shouldNotCrash));
+    unschedule("should_not_crash_key");
 
     auto s = Director::getInstance()->getWinSize();
 
@@ -393,16 +330,15 @@ void StressTest1::shouldNotCrash(float dt)
     runAction( Sequence::create(
                             RotateBy::create(2, 360),
                             CallFuncN::create(CC_CALLBACK_1(StressTest1::removeMe, this)),
-                            NULL) );
+                            nullptr) );
     
     addChild(explosion);
 }
 
 // remove
 void StressTest1::removeMe(Node* node)
-{    
-    getParent()->removeChild(node, true);
-    nextCallback(this);
+{
+    getTestSuite()->enterNextTest();
 }
 
 
@@ -413,7 +349,7 @@ std::string StressTest1::subtitle() const
 
 //------------------------------------------------------------------
 //
-// StressTest2
+// StressNodeTest2
 //
 //------------------------------------------------------------------
 StressTest2::StressTest2()
@@ -428,7 +364,7 @@ StressTest2::StressTest2()
     auto move = MoveBy::create(3, Vec2(350,0));
     auto move_ease_inout3 = EaseInOut::create(move->clone(), 2.0f);
     auto move_ease_inout_back3 = move_ease_inout3->reverse();
-    auto seq3 = Sequence::create( move_ease_inout3, move_ease_inout_back3, NULL);
+    auto seq3 = Sequence::create( move_ease_inout3, move_ease_inout_back3, nullptr);
     sp1->runAction( RepeatForever::create(seq3) );
     sublayer->addChild(sp1, 1);
 
@@ -437,18 +373,18 @@ StressTest2::StressTest2()
     fire->setPosition( Vec2(80, s.height/2-50) );
     
     auto copy_seq3 = seq3->clone();
-    
+
     fire->runAction( RepeatForever::create(copy_seq3) );
     sublayer->addChild(fire, 2);
             
-    schedule(schedule_selector(StressTest2::shouldNotLeak), 6.0f);
+    schedule(CC_CALLBACK_1(StressTest2::shouldNotLeak,this), 6.0f, "should_not_leak_key");
     
     addChild(sublayer, 0, kTagSprite1);
 }
 
 void StressTest2::shouldNotLeak(float dt)
 {
-    unschedule( schedule_selector(StressTest2::shouldNotLeak) );
+    unschedule("should_not_leak_key");
     auto sublayer = static_cast<Layer*>( getChildByTag(kTagSprite1) );
     sublayer->removeAllChildrenWithCleanup(true); 
 }
@@ -472,10 +408,10 @@ SchedulerTest1::SchedulerTest1()
     addChild(layer, 0);
     //CCLOG("retain count after addChild is %d", layer->getReferenceCount());      // 2
     
-    layer->schedule( schedule_selector(SchedulerTest1::doSomething) );
+    layer->schedule(CC_CALLBACK_1(SchedulerTest1::doSomething, this), "do_something_key");
     //CCLOG("retain count after schedule is %d", layer->getReferenceCount());      // 3 : (object-c viersion), but win32 version is still 2, because Timer class don't save target.
     
-    layer->unschedule(schedule_selector(SchedulerTest1::doSomething));
+    layer->unschedule("do_something_key");
     //CCLOG("retain count after unschedule is %d", layer->getReferenceCount());        // STILL 3!  (win32 is '2')
 }
 
@@ -487,6 +423,46 @@ void SchedulerTest1::doSomething(float dt)
 std::string SchedulerTest1::subtitle() const
 {
     return "cocosnode scheduler test #1";
+}
+
+//------------------------------------------------------------------
+//
+// SchedulerCallbackTest
+//
+//------------------------------------------------------------------
+SchedulerCallbackTest::SchedulerCallbackTest()
+{
+    auto node = Node::create();
+    addChild(node, 0);
+    node->setName("a node");
+
+    _total = 0;
+    node->schedule([&](float dt) {
+        _total += dt;
+        log("hello world: %f - total: %f", dt, _total);
+    }
+                   ,0.5
+                   ,"some_key");
+
+
+    node->scheduleOnce([&](float dt) {
+        // the local variable "node" will go out of scope, so I have to get it from "this"
+        auto anode = this->getChildByName("a node");
+        anode->unschedule("some_key");
+    }
+                       ,5
+                       ,"ignore_key");
+}
+
+void SchedulerCallbackTest::onEnter()
+{
+    TestCocosNodeDemo::onEnter();
+    log("--onEnter-- Must be called before the scheduled lambdas");
+}
+
+std::string SchedulerCallbackTest::subtitle() const
+{
+    return "Node scheduler with lambda";
 }
 
 //------------------------------------------------------------------
@@ -507,7 +483,7 @@ NodeToWorld::NodeToWorld()
     auto backSize = back->getContentSize();
     
     auto item = MenuItemImage::create(s_PlayNormal, s_PlaySelect);
-    auto menu = Menu::create(item, NULL);
+    auto menu = Menu::create(item, nullptr);
     menu->alignItemsVertically();
     menu->setPosition( Vec2(backSize.width/2, backSize.height/2));
     back->addChild(menu);
@@ -518,7 +494,7 @@ NodeToWorld::NodeToWorld()
     
     auto move = MoveBy::create(3, Vec2(200,0));
     auto move_back = move->reverse();
-    auto seq = Sequence::create( move, move_back, NULL);
+    auto seq = Sequence::create( move, move_back, nullptr);
     auto fe2 = RepeatForever::create(seq);
     back->runAction(fe2);
 }
@@ -553,7 +529,7 @@ NodeToWorld3D::NodeToWorld3D()
     auto backSize = back->getContentSize();
 
     auto item = MenuItemImage::create(s_PlayNormal, s_PlaySelect);
-    auto menu = Menu::create(item, NULL);
+    auto menu = Menu::create(item, nullptr);
     menu->alignItemsVertically();
     menu->setPosition( Vec2(backSize.width/2, backSize.height/2));
     back->addChild(menu);
@@ -564,7 +540,7 @@ NodeToWorld3D::NodeToWorld3D()
 
     auto move = MoveBy::create(3, Vec2(200,0));
     auto move_back = move->reverse();
-    auto seq = Sequence::create( move, move_back, NULL);
+    auto seq = Sequence::create( move, move_back, nullptr);
     auto fe2 = RepeatForever::create(seq);
     back->runAction(fe2);
 
@@ -884,7 +860,7 @@ std::string ConvertToNode::subtitle() const
 
 NodeOpaqueTest::NodeOpaqueTest()
 {
-    Sprite *background = NULL;
+    Sprite *background = nullptr;
 
     for (int i = 0; i < 50; i++)
     {
@@ -909,7 +885,7 @@ std::string NodeOpaqueTest::subtitle() const
 
 NodeNonOpaqueTest::NodeNonOpaqueTest()
 {
-    Sprite *background = NULL;
+    Sprite *background = nullptr;
 
     for (int i = 0; i < 50; i++)
     {
@@ -988,7 +964,7 @@ class MySprite : public Sprite
 public:
     static MySprite* create(const std::string &spritefilename)
     {
-        auto sprite = new MySprite;
+        auto sprite = new (std::nothrow) MySprite;
         sprite->initWithFile(spritefilename);
         sprite->autorelease();
 
@@ -1006,7 +982,7 @@ protected:
 
 void MySprite::draw(Renderer *renderer, const Mat4 &transform, uint32_t flags)
 {
-    _customCommand.init(_globalZOrder);
+    _customCommand.init(_globalZOrder, transform, flags);
     _customCommand.func = CC_CALLBACK_0(MySprite::onDraw, this, transform, flags);
     renderer->addCommand(&_customCommand);
 }
@@ -1164,7 +1140,7 @@ NodeNormalizedPositionTest1::NodeNormalizedPositionTest1()
 
     for(int i=0; i<5; i++) {
         sprites[i] = Sprite::create("Images/grossini.png");
-        sprites[i]->setNormalizedPosition(positions[i]);
+        sprites[i]->setPositionNormalized(positions[i]);
         addChild(sprites[i]);
     }
 }
@@ -1197,7 +1173,7 @@ NodeNormalizedPositionTest2::NodeNormalizedPositionTest2()
 
     for(int i=0; i<5; i++) {
         sprites[i] = Sprite::create("Images/grossini.png");
-        sprites[i]->setNormalizedPosition(positions[i]);
+        sprites[i]->setPositionNormalized(positions[i]);
         addChild(sprites[i]);
     }
     scheduleUpdate();
@@ -1206,7 +1182,7 @@ NodeNormalizedPositionTest2::NodeNormalizedPositionTest2()
     _copyContentSize = getContentSize();
 
 //    setAnchorPoint(Vec2(0.5,0.5));
-//    setNormalizedPosition(Vec2(0.5,0.5));
+//    setPositionNormalized(Vec2(0.5,0.5));
 }
 
 std::string NodeNormalizedPositionTest2::title() const
@@ -1228,10 +1204,48 @@ void NodeNormalizedPositionTest2::update(float dt)
 
     Size s = Size(_copyContentSize.width*norm, _copyContentSize.height*norm);
     setContentSize(s);
-
     CCLOG("s: %f,%f", s.width, s.height);
 }
 
+
+//------------------------------------------------------------------
+//
+// NodeNormalizedPositionBugTest
+//
+//------------------------------------------------------------------
+NodeNormalizedPositionBugTest::NodeNormalizedPositionBugTest()
+: _accum(0)
+{
+    Vec2 position;
+   
+    position = Vec2(0.5,0.5);
+
+    
+    sprite = Sprite::create("Images/grossini.png");
+    sprite->setPositionNormalized(position);
+    addChild(sprite);
+    
+    scheduleUpdate();
+}
+
+std::string NodeNormalizedPositionBugTest::title() const
+{
+    return "NodeNormalizedPositionBugTest";
+}
+
+std::string NodeNormalizedPositionBugTest::subtitle() const
+{
+    return "When changing sprite normalizedPosition, the sprite doesn't move!";
+}
+
+void NodeNormalizedPositionBugTest::update(float dt)
+{
+    _accum += dt;
+    
+    // for 5 seconds
+    float norm = clampf(sinf(_accum), 0, 1.0);
+    sprite->setPositionNormalized(Vec2(norm,norm));
+}
 
 std::string NodeNameTest::title() const
 {
@@ -1245,8 +1259,18 @@ std::string NodeNameTest::subtitle() const
 
 void NodeNameTest::onEnter()
 {
-    TestCocosNodeDemo::BaseTest::onEnter();
+    TestCocosNodeDemo::onEnter();
     
+    this->scheduleOnce(CC_CALLBACK_1(NodeNameTest::test, this), 0.05f, "test_key");
+}
+
+void NodeNameTest::onExit()
+{
+    TestCocosNodeDemo::onExit();
+}
+
+void NodeNameTest::test(float dt)
+{
     auto parent = Node::create();
     
     // setName(), getName() and getChildByName()
@@ -1267,22 +1291,8 @@ void NodeNameTest::onEnter()
     }
     
     // enumerateChildren()
-    int i = 0;
-    parent->enumerateChildren("test", [&i](Node* node) -> bool {
-        ++i;
-        return true;
-    });
-    CCAssert(i == 1, "");
-    
-    i = 0;
-    parent->enumerateChildren("test", [&i](Node* node) -> bool {
-        ++i;
-        return false;
-    });
-    CCAssert(i == 2, "");
-    
-    // enumerateChildren()
     // name = regular expression
+    int i = 0;
     parent = Node::create();
     for (int i = 0; i < 100; ++i)
     {
@@ -1306,19 +1316,18 @@ void NodeNameTest::onEnter()
     });
     CCAssert(i == 1, "");
     
-    
     // enumerateChildren
     // name = node[[digit]]+/node
     
     parent = Node::create();
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         auto node = Node::create();
         sprintf(name, "node%d", i);
         node->setName(name);
         parent->addChild(node);
         
-        for (int j = 0; j < 100; ++j)
+        for (int j = 0; j < 10; ++j)
         {
             auto child = Node::create();
             child->setName("node");
@@ -1331,7 +1340,7 @@ void NodeNameTest::onEnter()
         ++i;
         return false;
     });
-    CCAssert(i == 100, "");
+    CCAssert(i == 10, "");
     
     i = 0;
     parent->enumerateChildren("node1/node", [&i](Node* node) -> bool {
@@ -1340,12 +1349,29 @@ void NodeNameTest::onEnter()
     });
     CCAssert(i == 1, "");
     
+    // search from root
+    parent = Node::create();
+    for (int i = 0; i < 10; ++i)
+    {
+        auto node = Node::create();
+        sprintf(name, "node%d", i);
+        node->setName(name);
+        parent->addChild(node);
+        
+        for (int j = 0; j < 10; ++j)
+        {
+            auto child = Node::create();
+            child->setName("node");
+            node->addChild(child);
+        }
+    }
+    
     i = 0;
     parent->enumerateChildren("node[[:digit:]]+/node", [&i](Node* node) -> bool {
         ++i;
         return false;
     });
-    CCAssert(i == 10000, "");
+    CCAssert(i == 100, "");
     
     i = 0;
     parent->enumerateChildren("node[[:digit:]]+/node", [&i](Node* node) -> bool {
@@ -1368,18 +1394,18 @@ void NodeNameTest::onEnter()
         ++i;
         return false;
     });
-    CCAssert(i == 10000, "");
+    CCAssert(i == 100, "");
     
-    // name = /xxx : search from root
-    parent = getScene();
-    for (int j = 0; j < 100; j++)
+    // name = //xxx : search recursively
+    parent = Node::create();
+    for (int j = 0; j < 10; j++)
     {
         auto node = Node::create();
         sprintf(name, "node%d", j);
         node->setName(name);
         parent->addChild(node);
         
-        for (int k = 0; k < 100; ++k)
+        for (int k = 0; k < 10; ++k)
         {
             auto child = Node::create();
             sprintf(name, "node%d", k);
@@ -1389,48 +1415,145 @@ void NodeNameTest::onEnter()
     }
     
     i = 0;
-    enumerateChildren("/node[[:digit:]]+", [&i](Node* node) -> bool {
+    parent->enumerateChildren("//node[[:digit:]]+", [&i](Node* node) -> bool {
+        ++i;
+        return false;
+    });
+    CCAssert(i == 110, ""); // 100(children) + 10(parent)
+    
+    i = 0;
+    parent->enumerateChildren("//node[[:digit:]]+", [&i](Node* node) -> bool {
+        ++i;
+        return true;
+    });
+    CCAssert(i == 1, "");
+    
+    i = 0;
+    parent->enumerateChildren("//node[[:digit:]]+/..", [&i](Node* node) -> bool {
         ++i;
         return false;
     });
     CCAssert(i == 100, "");
     
-    i = 0;
-    enumerateChildren("/node[[:digit:]]+", [&i](Node* node) -> bool {
-        ++i;
-        return true;
-    });
-    CCAssert(i == 1, "");
+    // utils::findChildren()
     
-    i = 0;
-    enumerateChildren("//node[[:digit:]]+", [&i](Node* node) -> bool {
-        ++i;
-        return false;
-    });
-    CCAssert(i == 10100, ""); // 10000(children) + 100(parent)
-    
-    i = 0;
-    enumerateChildren("//node[[:digit:]]+", [&i](Node* node) -> bool {
-        ++i;
-        return true;
-    });
-    CCAssert(i == 1, "");
-    
-    i = 0;
-    enumerateChildren("//node[[:digit:]]+/..", [&i](Node* node) -> bool {
-        ++i;
-        return false;
-    });
-    CCAssert(i == 10000, "");
+    parent = Node::create();
+    for (int i = 0; i < 50; ++i)
+    {
+        auto child = Node::create();
+        child->setName("node");
+        parent->addChild(child);
+    }
+    auto findChildren = utils::findChildren(*parent, "node");
+    CCAssert(findChildren.size() == 50, "");
 }
 
-///
-/// main
-///
-void CocosNodeTestScene::runThisTest()
+//------------------------------------------------------------------
+//
+// Issue16100Test
+//
+//------------------------------------------------------------------
+void Issue16100Test::onEnter()
 {
-    auto layer = nextCocosNodeAction();
-    addChild(layer);
+    TestCocosNodeDemo::onEnter();
 
-    Director::getInstance()->replaceScene(this);
+    // create user camera
+    auto s = Director::getInstance()->getWinSize();
+
+    auto delay = DelayTime::create(0.1f);
+    auto f = CallFunc::create([this, s]()
+    {
+        auto camera = Camera::createOrthographic(s.width * 2, s.height * 2, -1024, 1024);
+        camera->setCameraFlag(CameraFlag::USER1);
+        addChild(camera);
+    });
+    this->runAction(Sequence::createWithTwoActions(delay, f));
+
+    // grossini using default camera
+    auto sprite = Sprite::create("Images/grossini.png");
+    this->addChild(sprite);
+
+    sprite->setPosition(-200,s.height/3);
+    auto moveby = MoveBy::create(2, Vec2(400,0));
+    auto movebyback = moveby->reverse();
+    auto seq = Sequence::create(moveby, movebyback, nullptr);
+    auto forever = RepeatForever::create(seq);
+
+    sprite->runAction(forever);
+
+    sprite->setCameraMask((int)CameraFlag::DEFAULT);
+
+
+    // grossini's sister using user camera
+    auto sister = Sprite::create("Images/grossinis_sister1.png");
+    this->addChild(sister);
+
+    sister->setPosition(-200,s.height*2/3);
+    auto moveby1 = MoveBy::create(2, Vec2(400,0));
+    auto movebyback1 = moveby1->reverse();
+    auto seq1 = Sequence::create(moveby1, movebyback1, nullptr);
+    auto forever1 = RepeatForever::create(seq1);
+
+    sister->runAction(forever1);
+    sister->setCameraMask((int)CameraFlag::USER1);
+}
+
+void Issue16100Test::onExit()
+{
+    TestCocosNodeDemo::onExit();
+}
+
+std::string Issue16100Test::title() const
+{
+    return "Issue 16100";
+}
+
+std::string Issue16100Test::subtitle() const
+{
+    return "Sprite should appear on the screen";
+}
+
+//------------------------------------------------------------------
+//
+// Issue16735Test
+//
+//------------------------------------------------------------------
+void Issue16735Test::onEnter()
+{
+    TestCocosNodeDemo::onEnter();
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto origin = Director::getInstance()->getVisibleOrigin();
+
+    auto sprite1 = Sprite::create("Images/grossini.png");
+    sprite1->setPosition(Vec2(visibleSize / 2) + origin);
+    addChild(sprite1);
+
+    auto sprite2 = Sprite::create("Images/grossini.png");
+    sprite2->setPosition(Vec2(visibleSize / 2) + origin);
+    sprite2->setSkewX(30);
+    sprite2->setScale(2);
+    sprite2->setRotation(30);
+    addChild(sprite2);
+
+    auto d = DrawNode::create();
+    d->drawLine(Vec2(origin.x, origin.y + visibleSize.height/2), Vec2(origin.x + visibleSize.width, origin.y + visibleSize.height/2), Color4F::RED);
+    d->drawLine(Vec2(origin.x + visibleSize.width/2, origin.y), Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height), Color4F::RED);
+    
+    addChild(d);
+}
+
+void Issue16735Test::onExit()
+{
+    TestCocosNodeDemo::onExit();
+}
+
+std::string Issue16735Test::title() const
+{
+    return "Issue 16735";
+}
+
+std::string Issue16735Test::subtitle() const
+{
+    return "Sprite should appear on the center of screen";
 }

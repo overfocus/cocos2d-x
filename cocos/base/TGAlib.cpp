@@ -1,6 +1,6 @@
 /****************************************************************************
 Copyright (c) 2010-2012 cocos2d-x.org
-Copyright (c) 2013-2014 Chukong Technologies Inc.
+Copyright (c) 2013-2016 Chukong Technologies Inc.
 
 http://www.cocos2d-x.org
 
@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
-#include "TGAlib.h"
+#include "base/TGAlib.h"
 #include "base/CCData.h"
 #include "platform/CCFileUtils.h"
 
@@ -181,7 +181,7 @@ void tgaFlipImage( tImageTGA *info )
     unsigned char *row = (unsigned char *)malloc(rowbytes);
     int y;
     
-    if (row == NULL) return;
+    if (row == nullptr) return;
     
     for( y = 0; y < (info->height/2); y++ )
     {
@@ -233,7 +233,7 @@ tImageTGA* tgaLoadBuffer(unsigned char* buffer, long size)
         info->imageData = (unsigned char *)malloc(sizeof(unsigned char) * total);
 
         // check to make sure we have the memory required
-        if (info->imageData == NULL)
+        if (info->imageData == nullptr)
         {
             info->status = TGA_ERROR_MEMORY;
             break;

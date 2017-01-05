@@ -2,31 +2,39 @@
 --------------------------------
 -- @module EaseElasticOut
 -- @extend EaseElastic
+-- @parent_module cc
 
 --------------------------------
--- overload function: create(cc.ActionInterval)
---          
--- overload function: create(cc.ActionInterval, float)
---          
--- @function [parent=#EaseElasticOut] create
+-- 
+-- @function [parent=#EaseElasticOut] create 
 -- @param self
--- @param #cc.ActionInterval actioninterval
--- @param #float float
--- @return EaseElasticOut#EaseElasticOut ret (retunr value: cc.EaseElasticOut)
-
+-- @param #cc.ActionInterval action
+-- @param #float rate
+-- @return EaseElasticOut#EaseElasticOut ret (return value: cc.EaseElasticOut)
+        
 --------------------------------
+-- 
 -- @function [parent=#EaseElasticOut] clone 
 -- @param self
 -- @return EaseElasticOut#EaseElasticOut ret (return value: cc.EaseElasticOut)
         
 --------------------------------
+-- 
 -- @function [parent=#EaseElasticOut] update 
 -- @param self
--- @param #float float
+-- @param #float time
+-- @return EaseElasticOut#EaseElasticOut self (return value: cc.EaseElasticOut)
         
 --------------------------------
+-- 
 -- @function [parent=#EaseElasticOut] reverse 
 -- @param self
 -- @return EaseElastic#EaseElastic ret (return value: cc.EaseElastic)
+        
+--------------------------------
+-- 
+-- @function [parent=#EaseElasticOut] EaseElasticOut 
+-- @param self
+-- @return EaseElasticOut#EaseElasticOut self (return value: cc.EaseElasticOut)
         
 return nil

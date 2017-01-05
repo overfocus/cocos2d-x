@@ -50,7 +50,7 @@ Control::Control()
 
 Control* Control::create()
 {
-    Control* pRet = new Control();
+    Control* pRet = new (std::nothrow) Control();
     if (pRet && pRet->init())
     {
         pRet->autorelease();
@@ -59,7 +59,7 @@ Control* Control::create()
     else
     {
         CC_SAFE_DELETE(pRet);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -107,7 +107,7 @@ void Control::sendActionsForControlEvents(EventType controlEvents)
     // For each control events
     for (int i = 0; i < kControlEventTotalNumber; i++)
     {
-        // If the given controlEvents bitmask contains the curent event
+        // If the given controlEvents bitmask contains the current event
         if (((int)controlEvents & (1 << i)))
         {
             // Call invocations
@@ -135,7 +135,7 @@ void Control::addTargetWithActionForControlEvents(Ref* target, Handler action, E
     // For each control events
     for (int i = 0; i < kControlEventTotalNumber; i++)
     {
-        // If the given controlEvents bitmask contains the curent event
+        // If the given controlEvents bitmask contains the current event
         if (((int)controlEvents & (1 << i)))
         {
             this->addTargetWithActionForControlEvent(target, action, (EventType)(1<<i));
@@ -148,13 +148,13 @@ void Control::addTargetWithActionForControlEvents(Ref* target, Handler action, E
 /**
  * Adds a target and action for a particular event to an internal dispatch 
  * table.
- * The action message may optionnaly include the sender and the event as 
+ * The action message may optionally include the sender and the event as 
  * parameters, in that order.
  * When you call this method, target is not retained.
  *
  * @param target The target object that is, the object to which the action 
  * message is sent. It cannot be nil. The target is not retained.
- * @param action A selector identifying an action message. It cannot be NULL.
+ * @param action A selector identifying an action message. It cannot be nullptr.
  * @param controlEvent A control event for which the action message is sent.
  * See "CCControlEvent" for constants.
  */
@@ -173,7 +173,7 @@ void Control::removeTargetWithActionForControlEvents(Ref* target, Handler action
      // For each control events
     for (int i = 0; i < kControlEventTotalNumber; i++)
     {
-        // If the given controlEvents bitmask contains the curent event
+        // If the given controlEvents bitmask contains the current event
         if (((int)controlEvents & (1 << i)))
         {
             this->removeTargetWithActionForControlEvent(target, action, (EventType)(1 << i));
@@ -184,7 +184,6 @@ void Control::removeTargetWithActionForControlEvents(Ref* target, Handler action
 void Control::removeTargetWithActionForControlEvent(Ref* target, Handler action, EventType controlEvent)
 {
     // Retrieve all invocations for the given control event
-    //<Invocation*>
     auto& eventInvocationList = this->dispatchListforControlEvent(controlEvent);
     
     //remove all invocations if the target and action are null
@@ -248,6 +247,20 @@ Vec2 Control::getTouchLocation(Touch* touch)
     return touchLocation;
 }
 
+bool Control::onTouchBegan(Touch* /*touch*/, Event* /*event*/) {
+    return false;
+}
+
+void Control::onTouchMoved(Touch* /*touch*/, Event* /*event*/)
+{}
+
+void Control::onTouchEnded(Touch* /*touch*/, Event* /*event*/)
+{}
+
+void Control::onTouchCancelled(Touch* /*touch*/, Event* /*event*/)
+{}
+
+
 bool Control::isTouchInside(Touch* touch)
 {
     Vec2 touchLocation = touch->getLocation(); // Get the touch position
@@ -264,7 +277,7 @@ Vector<Invocation*>& Control::dispatchListforControlEvent(EventType controlEvent
     // If the invocation list does not exist for the  dispatch table, we create it
     if (iter == _dispatchTable.end())
     {
-        invocationList = new Vector<Invocation*>();
+        invocationList = new (std::nothrow) Vector<Invocation*>();
         _dispatchTable[(int)controlEvent] = invocationList;
     }
     else
@@ -320,7 +333,7 @@ bool Control::isHighlighted() const
 bool Control::hasVisibleParents() const
 {
     auto parent = this->getParent();
-    for( auto c = parent; c != NULL; c = c->getParent() )
+    for( auto c = parent; c != nullptr; c = c->getParent() )
     {
         if( !c->isVisible() )
         {

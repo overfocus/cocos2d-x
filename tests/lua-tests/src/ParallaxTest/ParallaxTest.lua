@@ -145,13 +145,14 @@ end
 function ParallaxTestMain()
     cclog("ParallaxMain")
     Helper.index = 1
-    cc.Director:getInstance():setDepthTest(true)
     local scene = cc.Scene:create()
 
     Helper.createFunctionTable = {
         Parallax1,
         Parallax2
     }
+    Helper.index = 1
+    
     scene:addChild(Parallax1())
     scene:addChild(CreateBackMenuItem())
     return scene

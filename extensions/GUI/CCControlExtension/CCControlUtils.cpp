@@ -31,7 +31,7 @@ Sprite* ControlUtils::addSpriteToTargetWithPosAndAnchor(const char* spriteName, 
     Sprite *sprite =Sprite::createWithSpriteFrameName(spriteName);
     
     if (!sprite)
-        return NULL;
+        return nullptr;
 
     sprite->setPosition(pos);
     sprite->setAnchorPoint(anchor);
@@ -92,7 +92,7 @@ RGBA ControlUtils::RGBfromHSV(HSV value)
     
     if (value.s <= 0.0) // < is bogus, just shuts up warnings
     {       
-        if (isnan(value.h)) // value.h == NAN
+        if (std::isnan(value.h)) // value.h == NAN
         {   
             out.r = value.v;
             out.g = value.v;
